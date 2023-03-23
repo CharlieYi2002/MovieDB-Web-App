@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Movie DB API</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+        <style>
+			@font-face {
+				font-family: Inconsolata;
+				src: url(Inconsolata/Inconsolata-VariableFont_wdth\,wght.ttf);
+			}
+            img {
+                width: 100px;
+                height: auto;
+            }
+			body {
+				background-color: aliceblue;
+			}
+			h3 {
+				font-family: Inconsolata;
+			}
+        </style>
+    </head>
+    <body onload="start()">
+        <div class="container">
+            <div class="row">
+                <h1 class="col-12 mt-4">Movie Database</h1>
+            </div>
+
+            <div class="row">
+                <form class="col-12" id="search-form">
+                    <div class="form-row">
+                        <div class="col-12 mt-4 col-sm-6 col-lg-4">
+
+                            <label for="search-val" class="sr-only">Search:</label>
+                            <input type="text" class="form-control" id="search-val" placeholder="Search ...">
+                            <small id="search-error" class="form-text text-danger"></small>
+
+                        </div>
+                        <div class="col-12 mt-4 col-sm-auto">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="row">
+                <div class="col-12 mt-4">
+
+                    Showing <span id="num-results" class="font-weight-bold">0</span> of <span id="total-results" class="font-weight-bold">0</span> result(s).
+
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12 mt-4 col-sm-auto col-lg-3">
+                    <h3>Image</h3>
+                </div>
+                <div class="col-12 mt-4 col-sm-auto col-lg-3">
+                    <h3>Title</h3>
+                </div>
+                
+                <div class="col-12 mt-4 col-sm-auto col-lg-3">
+                    <h3>Rating</h3>
+                </div>
+				
+				<div class="col-12 mt-4 col-sm-auto col-lg-3">
+                    <h3>Release Date</h3>
+                </div>
+            </div>
+            <div class="container" id="content">
+            </div>
+        </div>
+
+
+
+        <script src="http://code.jquery.com/jquery-3.5.1.min.js"></script>
+        <script src="http://303.itpwebdev.com/~hannah/itp303/math.js"></script>
+
+
+
+        <script>
+            document.querySelector('#search-form').onsubmit = function(){
+                var term = document.querySelector('#search-val').value.trim();
+                if (term.length != 0) { 
+                    const endpoint = `https://api.themoviedb.org/3/search/movie?api_key=3dbec9fae672ccf7ba0fc10e3dfb1d7a&language=en-US&query=${term}`;
+                    
+                    $.ajax({
+                        url: endpoint,
+                        dataType: 'json',
+                        success: function(data) {
+                            var results = data.total_results;
+                            if(data.total_results >= 20){
+                                results = 20
+                            }
+
+                            document.querySelector("#content").innerHTML = '';
+                            document.querySelector("#num-results").innerHTML = results;
+                            document.querySelector("#total-results").innerHTML = data.total_results;
+
+                            for (movie of data.results) {
+                                createRow(movie);
+                            }
+                        },
+                        error: function(e) {
+                            alert("AJAX error")
+                            console.log(e)
+                        }
+			        })
+                    
+                }
+                else {
+                    document.querySelector("#search-error").innerHTML = `Please enter your search`;
+                }
+                return false;
+            }
+
+
+            function createRow(movie){
+                var row = document.createElement('div');
+                var imgCol = document.createElement('div');
+                var titleCol = document.createElement('div');
+                var rateCol = document.createElement('div');
+				var releaseCol = document.createElement('div');
+
+				row.className = "row";
+                imgCol.className = "col-12 col-sm-auto col-lg-3";
+                titleCol.className = "col-12 col-sm-auto col-lg-3";
+                rateCol.className = "col-12 col-sm-auto col-lg-3";
+                releaseCol.className = "col-12 col-sm-auto col-lg-3";
+
+                
+                
+                titleCol.innerHTML = "<p>" + movie.title + "</p>";
+                releaseCol.innerHTML = "<p>" + movie.release_date + "</p>";
+                rateCol.innerHTML = "<p>" + movie.vote_average + "</p>";
+
+				if(movie.poster_path != null){
+					imgCol.innerHTML = "<img src=\"https://image.tmdb.org/t/p/w500" + movie.poster_path + "\" alt=\"noimg\">";
+				}
+				else{
+					imgCol.innerHTML = "<img src=\"https://www.clipartmax.com/png/middle/300-3009914_night-at-the-movies-for-four-amc-theatres-logo-2014.png\" alt=\"amcLogo\">";
+				}
+
+				
+
+                row.append(imgCol);
+                row.append(titleCol);
+                row.append(rateCol);
+				row.append(releaseCol);
+
+
+                document.querySelector('#content').appendChild(row);
+            }
+
+            function start(){
+
+                $.ajax({
+                    url: "https://api.themoviedb.org/3/movie/now_playing?api_key=3dbec9fae672ccf7ba0fc10e3dfb1d7a&language=en-US",
+                    dataType: "json"
+                }).then((data) => {
+                    var results = 20;
+
+                    document.querySelector("#content").innerHTML = '';
+                    document.querySelector("#num-results").innerHTML = results;
+                    document.querySelector("#total-results").innerHTML = data.total_results;
+
+
+                    //var count = 0;
+
+                   
+                    
+                    for (movie of data.results) {
+                        createRow(movie);
+                        //count++;
+                        //if(count == 20) break;
+                    }
+                }).fail((error) => {
+                    alert("AJAX error");
+                    console.log(e);
+                })
+
+                
+
+
+
+
+            }
+
+			
+        </script>
+    </body>
+</html>
